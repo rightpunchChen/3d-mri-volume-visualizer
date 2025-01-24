@@ -107,12 +107,13 @@ class MainWindowController(QMainWindow):
 
     def update_render_button(self):
         file_path = self.ui.BF_lineEdit.text()
-        if check_files(file_path):
+        file_exists = check_files(file_path)
+        if file_exists:
             self.ui.LF_btn.setEnabled(True)
             self.ui.LF_lineEdit.setEnabled(True)
             self.ui.render_pushButton.setEnabled(True)
             return
-        elif not check_files(file_path):
+        elif not file_exists:
             self.show_error_message(f"File does not exist: {file_path}")
 
         self.ui.LF_btn.setEnabled(False)
@@ -122,17 +123,23 @@ class MainWindowController(QMainWindow):
         self.ui.save_pushButton.setEnabled(False)
 
     def update_label_button(self):
+        self.label_image_vtk = None
+        self.label_image = None
+
         file_path = self.ui.LF_lineEdit.text()
-        if check_files(file_path):
+        file_exists = check_files(file_path)
+        if file_exists:
             self.label_image_vtk = load_image(file_path)
             self.label_image = vtk_img_to_numpy(self.label_image_vtk)
             max_label_value = self.label_image.max()
+            for i in range(1, 6):
+                getattr(self.ui, f'radioButton_{i}').setEnabled(False)
             for i in range(1, min(int(max_label_value) + 1, LABEL_NUM + 1)):
                 getattr(self.ui, f'radioButton_{i}').setEnabled(True)
             self.ui.PF_btn.setEnabled(True)
             self.ui.PF_lineEdit.setEnabled(True)
             return
-        elif not check_files(file_path):
+        elif not file_exists:
             self.show_error_message(f"File does not exist: {file_path}")
 
         for i in range(1, 6):
@@ -141,13 +148,16 @@ class MainWindowController(QMainWindow):
         self.ui.PF_lineEdit.setEnabled(False)
     
     def update_pred_button(self):
+        self.pred_image_vtk = None
+
         file_path = self.ui.PF_lineEdit.text()
-        if check_files(file_path):
+        file_exists = check_files(file_path)
+        if file_exists:
             self.pred_image_vtk = load_image(file_path)
             for i in ['tp', 'fp', 'fn']:
                 getattr(self.ui, f'radioButton_{i}').setEnabled(True)
             return
-        elif not check_files(file_path):
+        elif not file_exists:
             self.show_error_message(f"File does not exist: {file_path}")
 
         for i in ['tp', 'fp', 'fn']:
@@ -156,7 +166,7 @@ class MainWindowController(QMainWindow):
     def updata_LO_spinBox(self):
         for i in range(1, LABEL_NUM + 1):
             radio_button = getattr(self.ui, f'radioButton_{i}')
-            if radio_button.isChecked():
+            if radio_button.isChecked() and check_files(self.ui.LF_lineEdit.text()):
                 self.ui.LO_spinBox.setEnabled(True)
                 return
         self.ui.LO_spinBox.setEnabled(False)
@@ -165,7 +175,7 @@ class MainWindowController(QMainWindow):
     def updata_PO_spinBox(self):
         for i in ['tp', 'fp', 'fn']:
             radio_button = getattr(self.ui, f'radioButton_{i}')
-            if radio_button.isChecked():
+            if radio_button.isChecked() and check_files(self.ui.PF_lineEdit.text()):
                 self.ui.PO_spinBox.setEnabled(True)
                 return
         self.ui.PO_spinBox.setEnabled(False)
