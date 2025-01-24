@@ -65,15 +65,6 @@ class MainWindowController(QMainWindow):
         msg_box.setWindowTitle("Error")
         msg_box.exec()
 
-    # def load_image_(self, file_path):
-    #     try:
-    #         return load_image(file_path)
-    #     except Exception as e:
-    #         self.show_error_message(f"Failed to load file: {file_path}\nError: {str(e)}")
-    #         return None
-    #     # if not os.path.exists(file_path):
-    #     #     self.show_error_message(f"File does not exist: {file_path}")
-
     def open_brain_file(self):
         options = QFileDialog.Options()
         options |= QFileDialog.Option.DontUseNativeDialog
@@ -93,7 +84,7 @@ class MainWindowController(QMainWindow):
         options |= QFileDialog.Option.DontUseNativeDialog
         file_path, _ = QFileDialog.getOpenFileName(self,"Select NII files", "", "NII Files (*.nii *.nii.gz)", options=options)
         self.ui.PF_lineEdit.setText(file_path)
-        self.update_label_button()
+        self.update_pred_button()
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
