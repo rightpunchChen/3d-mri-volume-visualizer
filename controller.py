@@ -5,8 +5,8 @@ from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QFileDialog, QMessageBox
 
 from ui_window import Ui_MainWindow
-from utiles.vtk_tools import *
-from utiles.configs import *
+from utils.vtk_tools import *
+from utils.configs import *
 
 class MainWindowController(QMainWindow):
     def __init__(self):
