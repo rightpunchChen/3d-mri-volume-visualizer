@@ -249,9 +249,7 @@ class MainWindowController(QMainWindow):
         self.render_window.Render()
 
     def save_mp4(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.Option.DontUseNativeDialog
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save MP4 file", "", "MP4 Files (*.mp4)", options=options)
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save MP4 file", "", "MP4 Files (*.mp4)")
         if file_path:
             window_to_image_filter = vtk.vtkWindowToImageFilter()
             window_to_image_filter.SetInput(self.render_window)
