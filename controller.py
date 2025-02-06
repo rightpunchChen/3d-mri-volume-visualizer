@@ -4,7 +4,7 @@ from vtkmodules.util import numpy_support as vtkutil
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QFileDialog, QMessageBox
 
-from ui_window import Ui_MainWindow
+from ui_window import Ui_MainWindow, DropLineEdit
 from utils.vtk_tools import *
 from utils.configs import *
 
@@ -39,12 +39,12 @@ class MainWindowController(QMainWindow):
         self.ui.render_pushButton.clicked.connect(self.render_brain)
         self.ui.save_pushButton.clicked.connect(self.save_mp4)
 
+        self.ui.BF_lineEdit.textDropped.connect(self.update_render_button)
+        self.ui.LF_lineEdit.textDropped.connect(self.update_label_button)
+        self.ui.PF_lineEdit.textDropped.connect(self.update_pred_button)
         self.ui.BF_lineEdit.returnPressed.connect(self.update_render_button)
         self.ui.LF_lineEdit.returnPressed.connect(self.update_label_button)
         self.ui.PF_lineEdit.returnPressed.connect(self.update_pred_button)
-        # self.ui.PF_lineEdit.textChanged.connect(self.update_pred_button)
-        # self.ui.LF_lineEdit.textChanged.connect(self.update_label_button)
-        # self.ui.BF_lineEdit.textChanged.connect(self.update_render_button)
 
         self.layout = QVBoxLayout(self.ui.render)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -66,44 +66,19 @@ class MainWindowController(QMainWindow):
         msg_box.exec()
 
     def open_brain_file(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.Option.DontUseNativeDialog
-        file_path, _ = QFileDialog.getOpenFileName(self,"Select NII files", "", "NII Files (*.nii *.nii.gz)", options=options)
+        file_path, _ = QFileDialog.getOpenFileName(self,"Select NII files", "", "NII Files (*.nii *.nii.gz)")
         self.ui.BF_lineEdit.setText(file_path)
         self.update_render_button()
     
     def open_label_file(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.Option.DontUseNativeDialog
-        file_path, _ = QFileDialog.getOpenFileName(self,"Select NII files", "", "NII Files (*.nii *.nii.gz)", options=options)
+        file_path, _ = QFileDialog.getOpenFileName(self,"Select NII files", "", "NII Files (*.nii *.nii.gz)")
         self.ui.LF_lineEdit.setText(file_path)
         self.update_label_button()
         
     def open_prediction_file(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.Option.DontUseNativeDialog
-        file_path, _ = QFileDialog.getOpenFileName(self,"Select NII files", "", "NII Files (*.nii *.nii.gz)", options=options)
+        file_path, _ = QFileDialog.getOpenFileName(self,"Select NII files", "", "NII Files (*.nii *.nii.gz)")
         self.ui.PF_lineEdit.setText(file_path)
         self.update_pred_button()
-
-    def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-
-    def dropEvent(self, event):
-        for url in event.mimeData().urls():
-            file_path = url.toLocalFile()
-            if file_path.endswith(('.nii', '.nii.gz')):
-                if self.ui.BF_lineEdit.hasFocus():
-                    self.ui.BF_lineEdit.setText(file_path)
-                    self.update_render_button()
-                elif self.ui.LF_lineEdit.hasFocus():
-                    self.ui.LF_lineEdit.setText(file_path)
-                    self.update_label_button()
-                elif self.ui.PF_lineEdit.hasFocus():
-                    self.ui.PF_lineEdit.setText(file_path)
-                    self.update_pred_button()
-                break
 
     def update_render_button(self):
         file_path = self.ui.BF_lineEdit.text()
@@ -298,5 +273,7 @@ class MainWindowController(QMainWindow):
                 frame = frame.reshape(height, width, -1)
                 frame = frame[::-1]
                 frames.append(frame)
-            imageio.mimsave(file_path+'.mp4', frames, fps=30)
+            if not file_path.endswith(('.mp4')):
+                file_path = file_path + '.mp4'
+            imageio.mimsave(file_path, frames, fps=30)
             self.render_window.SetOffScreenRendering(0)
