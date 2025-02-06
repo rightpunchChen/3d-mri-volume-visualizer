@@ -282,7 +282,9 @@ class MainWindowController(QMainWindow):
             window_to_image_filter.SetInput(self.render_window)
             window_to_image_filter.SetInputBufferTypeToRGB()
             window_to_image_filter.ReadFrontBufferOff()
+            window_to_image_filter.SetScale(2)
 
+            self.render_window.SetOffScreenRendering(1)
             frames = []
 
             for _ in range(360):
@@ -297,3 +299,4 @@ class MainWindowController(QMainWindow):
                 frame = frame[::-1]
                 frames.append(frame)
             imageio.mimsave(file_path+'.mp4', frames, fps=30)
+            self.render_window.SetOffScreenRendering(0)
