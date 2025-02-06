@@ -10,7 +10,7 @@
 
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
-    QSize, QTime, QUrl, Qt)
+    QSize, QTime, QUrl, Qt, Signal)
 from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
@@ -19,6 +19,25 @@ from PySide6.QtWidgets import (QApplication, QLabel, QLineEdit, QMainWindow,
     QPushButton, QRadioButton, QSizePolicy, QSpinBox, QSlider,
     QWidget)
 
+
+class DropLineEdit(QLineEdit):
+    textDropped = Signal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        for url in event.mimeData().urls():
+            file_path = url.toLocalFile()
+            if file_path.endswith(('.nii', '.nii.gz')):
+                self.setText(file_path)
+                self.textDropped.emit(file_path)
+                break
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -29,7 +48,7 @@ class Ui_MainWindow(object):
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
 
-        self.BF_lineEdit = QLineEdit(self.centralwidget)
+        self.BF_lineEdit = DropLineEdit(self.centralwidget)
         self.BF_lineEdit.setObjectName(u"BF_lineEdit")
         self.BF_lineEdit.setGeometry(QRect(90, 40, 161, 21))
         self.BF_lineEdit.setClearButtonEnabled(False)
@@ -41,7 +60,7 @@ class Ui_MainWindow(object):
         self.LF_label = QLabel(self.centralwidget)
         self.LF_label.setObjectName(u"LF_label")
         self.LF_label.setGeometry(QRect(20, 70, 60, 21))
-        self.LF_lineEdit = QLineEdit(self.centralwidget)
+        self.LF_lineEdit = DropLineEdit(self.centralwidget)
         self.LF_lineEdit.setObjectName(u"LF_lineEdit")
         self.LF_lineEdit.setGeometry(QRect(90, 70, 161, 21))
         self.LF_lineEdit.setEnabled(False)
@@ -51,7 +70,7 @@ class Ui_MainWindow(object):
         self.PF_label = QLabel(self.centralwidget)
         self.PF_label.setObjectName(u"PF_label")
         self.PF_label.setGeometry(QRect(20, 100, 60, 21))
-        self.PF_lineEdit = QLineEdit(self.centralwidget)
+        self.PF_lineEdit = DropLineEdit(self.centralwidget)
         self.PF_lineEdit.setObjectName(u"PF_lineEdit")
         self.PF_lineEdit.setGeometry(QRect(90, 100, 161, 21))
         self.PF_lineEdit.setClearButtonEnabled(False)
