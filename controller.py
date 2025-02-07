@@ -251,6 +251,9 @@ class MainWindowController(QMainWindow):
     def save_mp4(self):
         file_path, _ = QFileDialog.getSaveFileName(self, "Save MP4 file", "", "MP4 Files (*.mp4)")
         if file_path:
+            self.ui.save_pushButton.setEnabled(False)
+            self.ui.save_pushButton.setText("Saving... 0%")
+
             window_to_image_filter = vtk.vtkWindowToImageFilter()
             window_to_image_filter.SetInput(self.render_window)
             window_to_image_filter.SetInputBufferTypeToRGB()
@@ -258,7 +261,11 @@ class MainWindowController(QMainWindow):
             window_to_image_filter.SetScale(1)
 
             self.render_window.SetOffScreenRendering(1)
+            
             self.render_window.SetSize(1920, 1080)
+            set_camera(self.renderer)
+            self.render_window.Render()
+            
             frames = []
 
             for _ in range(360):
@@ -272,7 +279,11 @@ class MainWindowController(QMainWindow):
                 frame = frame.reshape(height, width, -1)
                 frame = frame[::-1]
                 frames.append(frame)
+
             if not file_path.endswith(('.mp4')):
                 file_path = file_path + '.mp4'
             imageio.mimsave(file_path, frames, fps=30)
+
+            self.ui.save_pushButton.setText("Save")
+            self.ui.save_pushButton.setEnabled(True)
             self.render_window.SetOffScreenRendering(0)
