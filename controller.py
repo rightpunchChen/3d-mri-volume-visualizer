@@ -255,9 +255,10 @@ class MainWindowController(QMainWindow):
             window_to_image_filter.SetInput(self.render_window)
             window_to_image_filter.SetInputBufferTypeToRGB()
             window_to_image_filter.ReadFrontBufferOff()
-            window_to_image_filter.SetScale(2)
+            window_to_image_filter.SetScale(1)
 
             self.render_window.SetOffScreenRendering(1)
+            self.render_window.SetSize(1920, 1080)
             frames = []
 
             for _ in range(360):
