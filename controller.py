@@ -88,7 +88,7 @@ class MainWindowController(QMainWindow):
             self.ui.LF_lineEdit.setEnabled(True)
             self.ui.render_pushButton.setEnabled(True)
             return
-        elif not file_exists:
+        elif file_path and not file_exists:
             self.show_error_message(f"File does not exist: {file_path}")
 
         self.ui.LF_btn.setEnabled(False)
@@ -119,7 +119,7 @@ class MainWindowController(QMainWindow):
             self.ui.PF_btn.setEnabled(True)
             self.ui.PF_lineEdit.setEnabled(True)
             return
-        elif not file_exists:
+        elif file_path and not file_exists:
             self.show_error_message(f"File does not exist: {file_path}")
 
         for i in range(1, 6):
@@ -143,7 +143,7 @@ class MainWindowController(QMainWindow):
                 button.setStyleSheet(f"color: rgb({r}, {g}, {b});")
                 button.setEnabled(True)
             return
-        elif not file_exists:
+        elif file_path and not file_exists:
             self.show_error_message(f"File does not exist: {file_path}")
 
         for p in ['tp', 'fp', 'fn']:
