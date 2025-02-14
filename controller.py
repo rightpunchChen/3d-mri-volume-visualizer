@@ -4,7 +4,7 @@ from vtkmodules.util import numpy_support as vtkutil
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QFileDialog, QMessageBox
 
-from ui_window import Ui_MainWindow, DropLineEdit
+from ui_window import Ui_MainWindow
 from utils.vtk_tools import *
 from utils.configs import *
 
@@ -108,9 +108,14 @@ class MainWindowController(QMainWindow):
             self.label_image = vtk_img_to_numpy(self.label_image_vtk)
             max_label_value = self.label_image.max()
             for i in range(1, 6):
-                getattr(self.ui, f'radioButton_{i}').setEnabled(False)
+                button = getattr(self.ui, f'radioButton_{i}')
+                button.setStyleSheet("")
+                button.setEnabled(False)
             for i in range(1, min(int(max_label_value) + 1, LABEL_NUM + 1)):
-                getattr(self.ui, f'radioButton_{i}').setEnabled(True)
+                r, g, b = int(MASK_COLORS[i][0]*255), int(MASK_COLORS[i][1]*255), int(MASK_COLORS[i][2]*255)
+                button = getattr(self.ui, f'radioButton_{i}')
+                button.setStyleSheet(f"color: rgb({r}, {g}, {b});")
+                button.setEnabled(True)
             self.ui.PF_btn.setEnabled(True)
             self.ui.PF_lineEdit.setEnabled(True)
             return
@@ -118,7 +123,10 @@ class MainWindowController(QMainWindow):
             self.show_error_message(f"File does not exist: {file_path}")
 
         for i in range(1, 6):
-            getattr(self.ui, f'radioButton_{i}').setEnabled(False)
+            button = getattr(self.ui, f'radioButton_{i}')
+            button.setStyleSheet("")
+            button.setEnabled(False)
+            
         self.ui.PF_btn.setEnabled(False)
         self.ui.PF_lineEdit.setEnabled(False)
     
@@ -129,14 +137,19 @@ class MainWindowController(QMainWindow):
         file_exists = check_files(file_path)
         if file_exists:
             self.pred_image_vtk = load_image(file_path)
-            for i in ['tp', 'fp', 'fn']:
-                getattr(self.ui, f'radioButton_{i}').setEnabled(True)
+            for p in ['tp', 'fp', 'fn']:
+                r, g, b = int(PRED_COLORS[p][0]*255), int(PRED_COLORS[p][1]*255), int(PRED_COLORS[p][2]*255)
+                button = getattr(self.ui, f'radioButton_{p}')
+                button.setStyleSheet(f"color: rgb({r}, {g}, {b});")
+                button.setEnabled(True)
             return
         elif not file_exists:
             self.show_error_message(f"File does not exist: {file_path}")
 
-        for i in ['tp', 'fp', 'fn']:
-            getattr(self.ui, f'radioButton_{i}').setEnabled(False)
+        for p in ['tp', 'fp', 'fn']:
+            button = getattr(self.ui, f'radioButton_{p}')
+            button.setStyleSheet("")
+            button.setEnabled(False)
 
     def updata_LO_spinBox(self):
         for i in range(1, LABEL_NUM + 1):
@@ -185,7 +198,7 @@ class MainWindowController(QMainWindow):
                     self.label_actor[selected_label[l]] = setup_actor(
                         self.label_image_vtk,
                         self.ui.LO_spinBox.value() / 100,
-                        MASK_COLORS[selected_label[l] - 1],
+                        MASK_COLORS[selected_label[l]],
                         selected_label[l]
                         )
                     self.renderer.AddActor(self.label_actor[selected_label[l]])
@@ -198,7 +211,7 @@ class MainWindowController(QMainWindow):
                     self.tp_actor = setup_actor(
                         tp,
                         self.ui.PO_spinBox.value() / 100,
-                        TP_COLOR
+                        PRED_COLORS['tp']
                         )
                     self.renderer.AddActor(self.tp_actor)
                     self.ui.PO_spinBox.setEnabled(True)
@@ -208,7 +221,7 @@ class MainWindowController(QMainWindow):
                     self.fp_actor = setup_actor(
                         fp,
                         self.ui.PO_spinBox.value()/100,
-                        FP_COLOR
+                        PRED_COLORS['fp']
                         )
                     self.renderer.AddActor(self.fp_actor)
                     self.ui.PO_spinBox.setEnabled(True)
@@ -218,7 +231,7 @@ class MainWindowController(QMainWindow):
                     self.fn_actor = setup_actor(
                         fn,
                         self.ui.PO_spinBox.value()/100,
-                        FN_COLOR
+                        PRED_COLORS['fn']
                         )
                     self.renderer.AddActor(self.fn_actor)
                     self.ui.PO_spinBox.setEnabled(True)
@@ -284,6 +297,6 @@ class MainWindowController(QMainWindow):
                 file_path = file_path + '.mp4'
             imageio.mimsave(file_path, frames, fps=30)
 
-            self.ui.save_pushButton.setText("Save")
+            self.ui.save_pushButton.setText("Save MP4")
             self.ui.save_pushButton.setEnabled(True)
             self.render_window.SetOffScreenRendering(0)
