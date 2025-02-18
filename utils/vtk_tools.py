@@ -60,13 +60,12 @@ def create_normals(smoother):
     return brain_normals
 
 
-def create_mapper(stripper):
+def create_mapper(normals):
     brain_mapper = vtk.vtkPolyDataMapper()
-    brain_mapper.SetInputConnection(stripper.GetOutputPort())
+    brain_mapper.SetInputConnection(normals.GetOutputPort())
     brain_mapper.ScalarVisibilityOff()
     brain_mapper.Update()
     return brain_mapper
-
 
 def create_property(opacity, color):
     prop = vtk.vtkProperty()
@@ -91,11 +90,126 @@ def setup_actor(img, opacity=0.3, color=(1.0,0.9,0.9), label_value=None):
     actor = create_actor(actor_mapper, actor_property)
     return actor
 
+def creat_reslice(vtk_img, orientation_mat):
+    reslice = vtk.vtkImageReslice()
+    reslice.SetInputData(vtk_img)
+    reslice.SetOutputDimensionality(2)
+    reslice.SetInterpolationModeToLinear()
+    reslice.SetResliceAxes(orientation_mat)
+    reslice.Update()
+    return reslice
+
+def create_mapper_sv(reslice):
+    brain_mapper = vtk.vtkImageMapper()
+    brain_mapper.SetInputConnection(reslice.GetOutputPort())
+    brain_mapper.SetColorWindow(1000)
+    brain_mapper.SetColorLevel(500)
+    brain_mapper.Update()
+    return brain_mapper
+
+def create_actor_sv(mapper):
+    actor = vtk.vtkActor2D()
+    actor.SetMapper(mapper)
+    return actor
+
+def setup_actor_sv(vtk_img, orientation):
+    matrix = vtk.vtkMatrix4x4()
+
+    if orientation == 0:        # (XY)
+        matrix.DeepCopy((1, 0, 0, 0,
+                        0, 1, 0, 0,
+                        0, 0, 1, 0,
+                        0, 0, 0, 1))
+
+    elif orientation == 1:   # (YZ)
+        matrix.DeepCopy((0, 0, 1, 0,
+                        0, 1, 0, 0,
+                        -1, 0, 0, 0,
+                        0, 0, 0, 1))
+
+    elif orientation == 2:    # (XZ)
+        matrix.DeepCopy((1, 0, 0, 0,
+                        0, 0, 1, 0,
+                        0, 1, 0, 0,
+                        0, 0, 0, 1))
+
+    reslice = creat_reslice(vtk_img, matrix)
+    # mapper = create_mapper_sv(reslice)
+    # actor = create_actor_sv(mapper)
+    actor = vtk.vtkImageActor()
+    actor.GetMapper().SetInputConnection(reslice.GetOutputPort())
+    return reslice, actor
+
+def setup_label_actor_sv(label_image, orientation, selected_labels, colors, alpha):
+    matrix = vtk.vtkMatrix4x4()
+
+    if orientation == 0:        # (XY)
+        matrix.DeepCopy((1, 0, 0, 0,
+                        0, 1, 0, 0,
+                        0, 0, 1, 0,
+                        0, 0, 0, 1))
+
+    elif orientation == 1:   # (YZ)
+        matrix.DeepCopy((0, 0, 1, 0,
+                        0, 1, 0, 0,
+                        -1, 0, 0, 0,
+                        0, 0, 0, 1))
+
+    elif orientation == 2:    # (XZ)
+        matrix.DeepCopy((1, 0, 0, 0,
+                        0, 0, 1, 0,
+                        0, 1, 0, 0,
+                        0, 0, 0, 1))
+
+    label_reslice = vtk.vtkImageReslice()
+    label_reslice.SetInputData(label_image)
+    label_reslice.SetInterpolationModeToNearestNeighbor()
+    label_reslice.SetOutputDimensionality(2)
+    label_reslice.SetResliceAxes(matrix)
+    label_reslice.Update()
+
+    label_map = vtk.vtkImageMapToColors()
+    label_map.SetInputConnection(label_reslice.GetOutputPort())
+    label_map.SetLookupTable(create_label_lut(colors, alpha, selected_labels))
+    label_map.SetOutputFormatToRGBA()
+    
+    label_map.Update()
+    actor = vtk.vtkImageActor()
+    actor.GetMapper().SetInputConnection(label_map.GetOutputPort())
+    return label_reslice, actor
+
+def create_label_lut(colors, alpha, selected_labels=None):
+    lut = vtk.vtkLookupTable()
+    lut.SetNumberOfColors(6)
+    lut.SetTableRange(0, 6)
+    lut.Build()
+    lut.SetTableValue(0, 0, 0, 0, 0)
+
+    if selected_labels:
+        for i in range(1, 6):
+            if i in selected_labels:
+                r, g, b = colors[i][0], colors[i][1], colors[i][2]
+                lut.SetTableValue(i, r, g, b, alpha)
+            else:
+                lut.SetTableValue(i, 0, 0, 0, 0)
+    else:
+        r, g, b = colors[0], colors[1], colors[2]
+        lut.SetTableValue(1, r, g, b, alpha)
+    
+    return lut
+
 def set_camera(renderer):
     camera = renderer.GetActiveCamera()
     camera.SetPosition(0, -10, 0) 
     camera.SetFocalPoint(0, 0, 0)
     camera.SetViewUp(0, 0, 1)
+    renderer.ResetCamera()
+
+def set_camera_sv(renderer):
+    camera = renderer.GetActiveCamera()
+    camera.SetPosition(0, 0, 1)
+    camera.SetFocalPoint(0, 0, 0)
+    camera.SetViewUp(0, 1, 0)
     renderer.ResetCamera()
 
 def AND(vtk_img1, vtk_img2):

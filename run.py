@@ -1,5 +1,5 @@
 from PySide6 import QtWidgets
-from controller import MainWindowController
+from controllers.controller import MainWindowController
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication([])
